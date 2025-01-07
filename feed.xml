@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.4">Jekyll</generator><link href="https://thanhdancer.com/feed.xml" rel="self" type="application/atom+xml" /><link href="https://thanhdancer.com/" rel="alternate" type="text/html" /><updated>2025-01-07T12:09:22+00:00</updated><id>https://thanhdancer.com/feed.xml</id><title type="html">Dancing on the keyboard</title><subtitle>Nhiều khi chỉ muốn tìm nơi trút ra, mà không muốn phiền ai cả.</subtitle><entry><title type="html">Lọc trùng dữ liệu</title><link href="https://thanhdancer.com/technical/2015/03/02/loc-trung-du-lieu.html" rel="alternate" type="text/html" title="Lọc trùng dữ liệu" /><published>2015-03-02T00:00:00+00:00</published><updated>2015-03-02T00:00:00+00:00</updated><id>https://thanhdancer.com/technical/2015/03/02/loc-trung-du-lieu</id><content type="html" xml:base="https://thanhdancer.com/technical/2015/03/02/loc-trung-du-lieu.html"><![CDATA[<h2 id="ý-chính">Ý chính</h2>
+<ul>
+  <li>Sử dụng Bash với công cụ <code class="language-plaintext highlighter-rouge">cat</code>, <code class="language-plaintext highlighter-rouge">parallel</code>, <code class="language-plaintext highlighter-rouge">sed</code>, <code class="language-plaintext highlighter-rouge">sort</code> cho kết quả tối ưu nhất.</li>
+</ul>
+
+<h2 id="giới-thiệu">Giới thiệu</h2>
+<p>Khi làm việc với dữ liệu thô, theo trạng thái từng từ, mỗi từ một dòng (thường dùng trong làm từ điển), dữ liệu thường bị thừa ra. Nguyên nhân là do dữ liệu trùng nhau, các kí tự thừa (\r, \n, space) ở đầu và cuối các từ làm bộ lọc nhầm lẫn cho rằng đây là các từ khác nhau. Vậy nên bài toán đặt ra trong quá trình làm sạch dữ liệu là xóa các kí tự thừa ở đầu và cuối của từ, sắp xếp và lọc các từ trùng nhau.</p>
+
+<p>Trong làm việc với dữ liệu ít, công việc đó đơn giản, thậm chí làm việc với các phần mềm bảng tính như Excel cũng có thể giải quyết vấn đề. Tuy nhiên, với dữ liệu bắt đầu từ 100 Mb đến hàng GB, TB thì ta phải có một số thủ thuật. Trong bài viết này mình sẽ chia sẻ kinh nghiệm vài lần xử lý và số liệu benchmark.</p>
+
+<h2 id="thử-nghiệm-lọc-trùng-lần-thứ-nhất">Thử nghiệm lọc trùng lần thứ nhất</h2>
+<h3 id="điều-kiện">Điều kiện</h3>
+<p>Máy tính cá nhân với cấu hình:</p>
+<ul>
+  <li>OS: Ubuntu 14.04</li>
+  <li>RAM: 4GB</li>
+  <li>CPU: Intel® Core™ i5-2430M CPU @ 2.40GHz × 4</li>
+</ul>
+
+<p>Dữ liệu được phân bổ:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">1k.txt</code>: 1,000 dòng đầu tiên của tệp dữ liệu.</li>
+  <li><code class="language-plaintext highlighter-rouge">100k.txt</code>: 100,000 dòng đầu tiên của tệp dữ liệu gốc.</li>
+  <li><code class="language-plaintext highlighter-rouge">6tr.txt</code>: Tệp dữ liệu gốc chứa khoảng 6 triệu dòng.</li>
+</ul>
+
+<h3 id="phương-thức-thực-hiện">Phương thức thực hiện</h3>
+<p>Mình sẽ sử dụng 3 ngôn ngữ để tiện so sánh: Bash, R, và Python.<br />
+Theo những cách trước đây, sẽ sử dụng ngôn ngữ Bash và hàm có sẵn của hệ điều hành linux là <code class="language-plaintext highlighter-rouge">sort</code> và <code class="language-plaintext highlighter-rouge">uniq</code>.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> &lt;input-file&gt; | <span class="nb">sort</span> | <span class="nb">uniq</span> &lt;output-file&gt;
+</code></pre></div></div>
+<p>Sau khi lọc trùng sẽ thu được output đã sắp xếp. Vì lệnh <code class="language-plaintext highlighter-rouge">uniq</code> chỉ được thực hiện sau khi đã sắp xếp input nên bắt buộc phải sort trước khi lọc trùng.</p>
+
+<p>Sau một thời gian tiếp cận, mình biết thêm <a href="https://www.r-project.org">ngôn ngữ R</a> được đánh giá rất tốt dùng cho Thống kê. Vậy nên mình đã cài đặt và thử nghiệm trong công việc lọc trùng. Đối với R, sau khi nhập dữ liệu, ta không cần phải sắp xếp.</p>
+
+<p>Cuối cùng với ngôn ngữ Python, dùng thư viện <a href="https://docs.python.org/3/library/collections.html#counter-objects"><code class="language-plaintext highlighter-rouge">collections.Counter</code></a> để đưa dữ liệu vào bộ đếm. Sau đó ghi ra file.</p>
+
+<h3 id="kết-quả">Kết quả</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Ngôn ngữ</th>
+      <th>Có sắp xếp</th>
+      <th>Đầu vào</th>
+      <th>Thời gian</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Bash</td>
+      <td>Có</td>
+      <td>1k.txt</td>
+      <td><strong>0s</strong></td>
+    </tr>
+    <tr>
+      <td>Bash</td>
+      <td>Có</td>
+      <td>100k.txt</td>
+      <td>1s</td>
+    </tr>
+    <tr>
+      <td>Bash</td>
+      <td>Có</td>
+      <td>6tr.txt</td>
+      <td>48s</td>
+    </tr>
+    <tr>
+      <td>R</td>
+      <td>Không</td>
+      <td>1k.txt</td>
+      <td>0.01s</td>
+    </tr>
+    <tr>
+      <td>R</td>
+      <td>Không</td>
+      <td>100k.txt</td>
+      <td><strong>0.657s</strong></td>
+    </tr>
+    <tr>
+      <td>R</td>
+      <td>Không</td>
+      <td>6tr.txt</td>
+      <td>71.624s</td>
+    </tr>
+    <tr>
+      <td>Python</td>
+      <td>Không</td>
+      <td>1k.txt</td>
+      <td>0.001s</td>
+    </tr>
+    <tr>
+      <td>Python</td>
+      <td>Không</td>
+      <td>100k.txt</td>
+      <td>0.075s</td>
+    </tr>
+    <tr>
+      <td>Python</td>
+      <td>Không</td>
+      <td>6tr.txt</td>
+      <td><strong>5.926s</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="nhận-xét">Nhận xét</h3>
+
+<p>Như vậy, dùng Bash xử lý file 72MB sẽ phải mất thời gian khoảng 48s để thực hiện, đối với R thì mất 71s (trong đó 28s để đọc dữ liệu). Riêng đối với Python chỉ mất khoảng 6s cho tất cả các công đoạn.</p>
+
+<p>Tuy nhiên với đầu ra của dữ liệu thì chênh lệch nhau khá lớn giữa các ngôn ngữ. Sau khi kiểm tra các file đầu ra của bộ input 100k, không tìm thấy sự khác nhau của output giữa các ngôn ngữ. Tuy nhiên lại có một phát hiện khác khi sử dụng lệnh cat -v đối với file 1k-python.out, cuối mỗi dòng xuất hiện ký tự <code class="language-plaintext highlighter-rouge">^M</code> (<code class="language-plaintext highlighter-rouge">\r</code> trong Windows).</p>
+
+<p>Hơn nữa, sau khi xem kĩ các file output, nhận thấy các kí tự thừa khoảng trống đằng sau nhưng vẫn không bị lọc.</p>
+
+<p><img src="/images/2015/03/02/extra-spaces-1.png" alt="Kí tự thừa" /></p>
+
+<p><img src="/images/2015/03/02/extra-spaces-2.png" alt="Kí tự thừa" /></p>
+
+<h3 id="rút-kinh-nghiệm">Rút kinh nghiệm</h3>
+<ul>
+  <li>Với khả năng tối ưu nhất, mình sẽ sử dụng Python để thực hiện các lần thử nghiệm tiếp theo.</li>
+  <li>Tiền xử lý dữ liệu (pre-process) bằng cách xoá hết các khoảng trống trước và sau của mỗi dòng.</li>
+  <li>Sử dụng đa luồng (multi-thread) để tăng tốc độ xử lý của CPU.</li>
+</ul>
+
+<h2 id="thử-nghiệm-lần-hai">Thử nghiệm lần hai</h2>
+<h3 id="điều-kiện-1">Điều kiện</h3>
+<ul>
+  <li>Tương tự như <a href="#điều-kiện">điều kiện của lần 1</a>.</li>
+  <li>Thêm file <code class="language-plaintext highlighter-rouge">full.txt</code> chứa toàn bộ dữ liệu cần xử lý (khoảng 500 MB).</li>
+</ul>
+
+<h3 id="phương-thức-thực-hiện-1">Phương thức thực hiện</h3>
+<p>Trước hết, xoá hết các ký tự khoảng trống, <code class="language-plaintext highlighter-rouge">\n</code>, <code class="language-plaintext highlighter-rouge">\r</code> ở trước và sau mỗi dòng.<br />
+Sử dụng hàm <code class="language-plaintext highlighter-rouge">map(str.strip, data)</code> của Python sau khi đọc file để thực hiện tác vụ trên. Các bước thử nghiệm tương tự lần trước.</p>
+
+<h3 id="kết-quả-1">Kết quả</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>File</th>
+      <th>Đọc</th>
+      <th>Xử lý</th>
+      <th>Ghi</th>
+      <th>Tổng</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1k.txt</td>
+      <td>0.000s</td>
+      <td>0.000s</td>
+      <td>0.000s</td>
+      <td><strong>0.001s</strong></td>
+    </tr>
+    <tr>
+      <td>100k.txt</td>
+      <td>0.004s</td>
+      <td>0.052s</td>
+      <td>0.047s</td>
+      <td><strong>0.103s</strong></td>
+    </tr>
+    <tr>
+      <td>6tr.txt</td>
+      <td>0.261s</td>
+      <td>3.740s</td>
+      <td>2.594s</td>
+      <td><strong>6.595s</strong></td>
+    </tr>
+    <tr>
+      <td>full.txt</td>
+      <td>1m 6s</td>
+      <td>9m 18s</td>
+      <td>34m 19s</td>
+      <td><strong>44m 44s</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="nhận-xét-1">Nhận xét</h3>
+<ul>
+  <li>Với 2 file <code class="language-plaintext highlighter-rouge">1k.txt</code> và <code class="language-plaintext highlighter-rouge">100k.txt</code>,  khi chưa có sự trùng lặp nhiều về các từ chứa kí tự trống 2 đầu, dung lượng file tương đồng với cách sử dụng Bash. Có thể kết luận mỗi dòng chứa thêm kí tự <code class="language-plaintext highlighter-rouge">^M</code> đã làm dung lượng file tăng lên đáng kể.</li>
+  <li>Đối với output của tập đầu vào <code class="language-plaintext highlighter-rouge">6tr.txt</code>, dung lượng đã giảm so với tập Bash ban đầu khoảng 30 KB.</li>
+  <li>Khi xử lý với bộ dữ liệu nặng hơn, RAM bị quá tải. Khi đọc file, mặc dù số lượng biến ít, nhưng giá trị của biến sẽ phải nạp tương ứng với kích thước file đọc vào (trong trường hợp <code class="language-plaintext highlighter-rouge">full.txt</code> là 499 MB). Nếu như chạy toàn bộ sẽ hết dung lượng RAM và thời gian chạy sẽ rất lâu do phải đợi bộ nhớ giải phóng. Các lệnh chạy này xử lý trên RAM, không ảnh hưởng tới CPU nên việc multi-thread không cấp bách bằng việc chia nhỏ file để load. Dung lượng RAM còn lại (khi chạy song song các chương trình khác) cũng rất quan trọng. Đối với bộ dữ liệu <code class="language-plaintext highlighter-rouge">6tr.txt</code>, khi chạy cùng Google Chrome xảy ra tình trạng xử lý lâu, mất tới 60s thay vì 6s như trong trường hợp chạy chỉ cùng các trình editor đơn thuần.</li>
+</ul>
+
+<p><img src="/images/2015/03/02/ram-usage.jpg" alt="RAM" /></p>
+
+<h3 id="rút-kinh-nghiệm-1">Rút kinh nghiệm</h3>
+<ul>
+  <li>Cắt nhỏ file ra thành từng phần nhỏ để xử lý.</li>
+</ul>
+
+<h2 id="thử-nghiệm-lần-ba">Thử nghiệm lần ba</h2>
+<h3 id="điều-kiện-2">Điều kiện</h3>
+<ul>
+  <li>Cấu hình và dữ liệu <a href="#điều-kiện">tương tự lần 1</a>.</li>
+</ul>
+
+<h3 id="phương-thức-thực-hiện-2">Phương thức thực hiện</h3>
+<p>Mình chưa tìm ra cách tối ưu khi load file và xử lý trên Python, vì vậy sẽ thử nghiệm với Bash để tìm cách cải tiến.</p>
+
+<p>Trước đây, dòng lệnh để xử lý dữ liệu là <code class="language-plaintext highlighter-rouge">cat &lt;input-file&gt; | sort | uniq &lt;output-file&gt;</code>. Khi sử dụng lênh trên phát sinh một số vấn đề:</p>
+<ul>
+  <li>Dùng 3 hàm liền nhau, lặp lại công việc bị thừa.</li>
+  <li>Chưa xử lý được vấn đề có các ký tự thừa ở đầu và cuối dòng.</li>
+  <li>Chạy đơn luồng, không tận dụng được CPU.</li>
+</ul>
+
+<p>Mình đã khắc phục như sau:</p>
+<ul>
+  <li>Dùng <code class="language-plaintext highlighter-rouge">sed</code> để xoá các ký tự không mong muốn.</li>
+  <li>Dùng <code class="language-plaintext highlighter-rouge">sort</code> với tham số -us (<code class="language-plaintext highlighter-rouge">-u: unique, -s: stable</code>). Khi sử dụng hai tham số này, ta đã có thể tối ưu việc xoá bỏ các dòng trùng nhau, sắp xếp, đọc file và chạy song song.</li>
+</ul>
+
+<p><img src="/images/2015/03/02/ram-usage-2.png" alt="RAM" /></p>
+
+<h4 id="bước-1-tiền-xử-lý-xoá-khoảng-trống">Bước 1: Tiền xử lý xoá khoảng trống</h4>
+
+<p>Với hàm <code class="language-plaintext highlighter-rouge">sed</code>, không có tham số tối ưu khi lọc dữ liệu nên chỉ chạy 1 luồng. Ta được kết quả:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>File</th>
+      <th>Thời gian</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>6tr.txt</td>
+      <td>7s</td>
+    </tr>
+    <tr>
+      <td>full.txt</td>
+      <td>1m 29s</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Để tối ưu hơn, mình sử dụng công cụ <a href="https://www.gnu.org/software/parallel/"><code class="language-plaintext highlighter-rouge">GNU parallel</code></a> để sed data. Câu lệnh tiền xử lý xoá khoảng trắng sẽ trở thành:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> &lt;input&gt; | parallel –pipe <span class="nb">sed</span> ‘-e “s/<span class="se">\r</span>//g” <span class="nt">-e</span> “s/^ <span class="k">*</span>//” <span class="nt">-e</span> “s/ <span class="k">*</span><span class="nv">$/</span>/”’ <span class="o">&gt;</span> &lt;output&gt;
+</code></pre></div></div>
+
+<p>Kết quả thu được:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>File</th>
+      <th>Thời gian</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>6tr.txt</td>
+      <td>6s</td>
+    </tr>
+    <tr>
+      <td>full.txt</td>
+      <td>41s</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4 id="bước-2-sắp-xếp-và-lọc-trùng">Bước 2: Sắp xếp và lọc trùng</h4>
+<p>Mình sẽ chỉ sử dụng lệnh <code class="language-plaintext highlighter-rouge">sort</code> với tham số -us để sắp xếp và lọc trùng. Câu lệnh sẽ trở thành:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sort</span> <span class="nt">-us</span> <span class="nt">-o</span> &lt;output&gt; &lt;input&gt;
+</code></pre></div></div>
+
+<p>Thời gian thực hiện:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>File</th>
+      <th>Thời gian</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>6tr.txt</td>
+      <td>33s</td>
+    </tr>
+    <tr>
+      <td>full.txt</td>
+      <td>3m 41s</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="nhận-xét-2">Nhận xét</h3>
+<p>Việc tối ưu đã hoàn thiện hơn nhiều so với lần trước.</p>]]></content><author><name></name></author><category term="technical" /><category term="python" /><category term="data" /><category term="processing" /><summary type="html"><![CDATA[Ý chính Sử dụng Bash với công cụ cat, parallel, sed, sort cho kết quả tối ưu nhất.]]></summary></entry></feed>
