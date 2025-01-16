@@ -1,4 +1,200 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.4">Jekyll</generator><link href="https://thanhdancer.com/feed.xml" rel="self" type="application/atom+xml" /><link href="https://thanhdancer.com/" rel="alternate" type="text/html" /><updated>2025-01-07T12:09:22+00:00</updated><id>https://thanhdancer.com/feed.xml</id><title type="html">Dancing on the keyboard</title><subtitle>Nhiều khi chỉ muốn tìm nơi trút ra, mà không muốn phiền ai cả.</subtitle><entry><title type="html">Lọc trùng dữ liệu</title><link href="https://thanhdancer.com/technical/2015/03/02/loc-trung-du-lieu.html" rel="alternate" type="text/html" title="Lọc trùng dữ liệu" /><published>2015-03-02T00:00:00+00:00</published><updated>2015-03-02T00:00:00+00:00</updated><id>https://thanhdancer.com/technical/2015/03/02/loc-trung-du-lieu</id><content type="html" xml:base="https://thanhdancer.com/technical/2015/03/02/loc-trung-du-lieu.html"><![CDATA[<h2 id="ý-chính">Ý chính</h2>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.4">Jekyll</generator><link href="https://thanhdancer.com/feed.xml" rel="self" type="application/atom+xml" /><link href="https://thanhdancer.com/" rel="alternate" type="text/html" /><updated>2025-01-16T06:39:36+00:00</updated><id>https://thanhdancer.com/feed.xml</id><title type="html">Dancing on the keyboard</title><subtitle>Nhiều khi chỉ muốn tìm nơi trút ra, mà không muốn phiền ai cả.</subtitle><entry><title type="html">Cẩn trọng dùng UFW với Docker</title><link href="https://thanhdancer.com/technical/2025/01/13/can-trong-dung-ufw-voi-docker.html" rel="alternate" type="text/html" title="Cẩn trọng dùng UFW với Docker" /><published>2025-01-13T00:00:00+00:00</published><updated>2025-01-13T00:00:00+00:00</updated><id>https://thanhdancer.com/technical/2025/01/13/can-trong-dung-ufw-voi-docker</id><content type="html" xml:base="https://thanhdancer.com/technical/2025/01/13/can-trong-dung-ufw-voi-docker.html"><![CDATA[<h2 id="tldr">TLDR;</h2>
+<ul>
+  <li>UFW không chặn được các gói tin từ bên trong mạng nội bộ khi mapping port với Docker container (thường dùng trong tham số của docker run <code class="language-plaintext highlighter-rouge">-p {internal-ip}:{expose-port}:{container-port}</code>).</li>
+  <li>Phương án 1: Sử dụng firewall từ Cloud Provider.</li>
+  <li>Phương án 2: Sử dụng <a href="https://linux.die.net/man/8/iptables"><code class="language-plaintext highlighter-rouge">iptables</code></a> để chặn các gói tin từ bên trong mạng nội bộ.</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Block all traffics </span>
+<span class="nb">sudo </span>iptables <span class="nt">-I</span> DOCKER-USER <span class="nt">-i</span> <span class="o">{</span>network_interface<span class="o">}</span> <span class="nt">-j</span> DROP
+
+<span class="c"># Keep connection states ESTABLISHED, RELATED</span>
+<span class="nb">sudo </span>iptables <span class="nt">-I</span> DOCKER-USER <span class="nt">-i</span> eth1 <span class="nt">-m</span> conntrack <span class="nt">--ctstate</span> ESTABLISHED,RELATED <span class="nt">-j</span> ACCEPT
+
+<span class="c"># Each allowing rule will be added</span>
+<span class="nb">sudo </span>iptables <span class="nt">-I</span> DOCKER-USER <span class="nt">-i</span> <span class="o">{</span>network_interface<span class="o">}</span> <span class="nt">-m</span> conntrack <span class="nt">-p</span> tcp <span class="nt">--ctstate</span> NEW <span class="nt">--ctorigsrc</span> <span class="o">{</span>source_ip<span class="o">}</span> <span class="nt">--ctorigdstport</span> <span class="o">{</span>destination_port<span class="o">}</span> <span class="nt">-j</span> ACCEPT
+</code></pre></div></div>
+
+<h2 id="kịch-bản">Kịch bản</h2>
+<p><a href="/images/2025/01/13/scenario1.png"><img src="/images/2025/01/13/scenario1.png" alt="Hạ tầng" /></a></p>
+<h3 id="hạ-tầng">Hạ tầng</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Máy chủ</th>
+      <th>Network Interface</th>
+      <th>IP Address</th>
+      <th>Mô tả</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>A</td>
+      <td>eth0</td>
+      <td>x.x.x.1</td>
+      <td>Cổng mạng ngoại bộ</td>
+    </tr>
+    <tr>
+      <td>A</td>
+      <td>eth1</td>
+      <td>10.0.0.1</td>
+      <td>Cổng mạng nội bộ</td>
+    </tr>
+    <tr>
+      <td>B</td>
+      <td>eth0</td>
+      <td>x.x.x.2</td>
+      <td>Cổng mạng ngoại bộ</td>
+    </tr>
+    <tr>
+      <td>B</td>
+      <td>eth1</td>
+      <td>10.0.0.2</td>
+      <td>Cổng mạng nội bộ</td>
+    </tr>
+    <tr>
+      <td>C</td>
+      <td>eth1</td>
+      <td>10.0.0.3</td>
+      <td>Cổng mạng nội bộ</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="dịch-vụ">Dịch vụ</h3>
+<p>Các dịch vụ đang chạy trong docker container, các cổng (port) được mapping như bảng sau.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Máy chủ</th>
+      <th>Dịch vụ</th>
+      <th>Bind IP</th>
+      <th>Port</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>A</td>
+      <td>Web Server</td>
+      <td>0.0.0.0</td>
+      <td>80</td>
+    </tr>
+    <tr>
+      <td>B</td>
+      <td>MySQL 1</td>
+      <td>10.0.0.2</td>
+      <td>3306</td>
+    </tr>
+    <tr>
+      <td>B</td>
+      <td>MySQL 2</td>
+      <td>10.0.0.2</td>
+      <td>3307</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="mục-tiêu">Mục tiêu</h3>
+<ul>
+  <li>Chặn toàn bộ các gói tin từ Internet vào máy chủ B.</li>
+  <li>Chặn toàn bộ các gói tin từ bên trong mạng nội bộ vào máy chủ B.</li>
+  <li>Mở cho duy nhất máy chủ C được phép truy cập vào máy chủ B qua cổng 3307</li>
+  <li>Mở cho duy nhất máy chủ A được phép truy cập vào máy chủ B qua cổng 3306</li>
+</ul>
+
+<h3 id="thực-thi">Thực thi</h3>
+<p><ins><strong><em>Lưu ý:</em></strong> Kịch bản này chứa lỗi, không sử dụng trong môi trường thực tế.</ins></p>
+<ul>
+  <li>Bind dịch vụ MySQL 1 và MySQL 2 trên máy chủ B với cổng 3306 và 3307 trên cổng mạng nội bộ.</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Môi trường: Máy chủ B</span>
+docker run <span class="nt">--name</span> mysql-1 <span class="nt">-d</span> <span class="nt">-p</span> 10.0.0.2:3306:3306 mysql:5.7 
+docker run <span class="nt">--name</span> mysql-2 <span class="nt">-d</span> <span class="nt">-p</span> 10.0.0.2:3307:3306 mysql:5.7
+</code></pre></div></div>
+<ul>
+  <li>Dùng <code class="language-plaintext highlighter-rouge">ufw</code> làm firewall trên máy chủ B.</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Môi trường: Máy chủ B</span>
+
+<span class="c"># Chặn toàn kết nối vào</span>
+ufw default deny incoming
+
+<span class="c"># Mở cổng 3306 cho máy chủ A</span>
+ufw allow from 10.0.0.1/32 to any port 3306
+
+<span class="c"># Mở cổng 3307 cho máy chủ C</span>
+ufw allow from 10.0.0.3/32 to any port 3307
+</code></pre></div></div>
+
+<h2 id="vấn-đề">Vấn đề</h2>
+<ul>
+  <li>UFW không chặn được các gói tin <sup id="fnref:1"><a href="#fn:1" class="footnote" rel="footnote" role="doc-noteref">1</a></sup> khi mapping port với Docker container (thường dùng trong tham số của docker run <code class="language-plaintext highlighter-rouge">-p {internal-ip}:{expose-port}:{container-port}</code>).</li>
+  <li>Một số bài viết <sup id="fnref:2"><a href="#fn:2" class="footnote" rel="footnote" role="doc-noteref">2</a></sup> tìm cách chèn thêm các rules vào chain <code class="language-plaintext highlighter-rouge">DOCKER-USER</code> của iptables nhưng chỉ hiệu quả để chặn các gói tin đến từ bên ngoài, không chặn được các gói tin từ bên trong mạng nội bộ như kịch bản đề ra.</li>
+</ul>
+
+<h2 id="phương-án">Phương án</h2>
+<h3 id="1-sử-dụng-firewall-từ-cloud-provider">1. Sử dụng firewall từ Cloud Provider</h3>
+<ul>
+  <li>Đối với các dịch vụ cloud chuyên nghiệp như AWS, GCP, Azure, các máy chủ sẽ được quản lý bởi firewall của cloud provider. Với sự hỗ trợ của hệ thống mạng ảo VPC, họ tích hợp firewall tầng mạng thay vì sử dụng các firewall tầng phần mềm <sup id="fnref:3"><a href="#fn:3" class="footnote" rel="footnote" role="doc-noteref">3</a></sup> <sup id="fnref:4"><a href="#fn:4" class="footnote" rel="footnote" role="doc-noteref">4</a></sup> <sup id="fnref:5"><a href="#fn:5" class="footnote" rel="footnote" role="doc-noteref">5</a></sup>. Vì vậy, việc chặn sẽ hiệu quả và không ảnh hưởng vì các phần mềm xung đột với nhau.</li>
+</ul>
+
+<h3 id="2-sử-dụng-iptables-trên-từng-máy-chủ">2. Sử dụng iptables trên từng máy chủ</h3>
+<ul>
+  <li>Dùng chain <code class="language-plaintext highlighter-rouge">DOCKER-USER</code> để quản lý các rule của Docker thay vì các chain mặc định. Mục đích của việc này là để tách biệt các rule định nghĩa cho Docker với các rule khác <sup id="fnref:1:1"><a href="#fn:1" class="footnote" rel="footnote" role="doc-noteref">1</a></sup>.</li>
+  <li>Các rules viết phải sử dụng extension <code class="language-plaintext highlighter-rouge">conntrack</code><sup id="fnref:6"><a href="#fn:6" class="footnote" rel="footnote" role="doc-noteref">6</a></sup>  vì sau khi gói tin vào <code class="language-plaintext highlighter-rouge">DOCKER-USER</code> đã qua bộ lọc DNAT <sup id="fnref:1:2"><a href="#fn:1" class="footnote" rel="footnote" role="doc-noteref">1</a></sup>, địa chỉ và cổng đã có thể bị thay đổi.</li>
+  <li>Lệnh thêm rules vào chain <code class="language-plaintext highlighter-rouge">DOCKER-USER</code> trên máy chủ B:</li>
+</ul>
+
+<p><ins><strong><em>Lưu ý:</em></strong> iptables có thể làm mất kết nối điều khiển nếu bạn cấu hình sai. Hãy chắc chắn có phương án truy cập thay thế trong trường hợp mất kết nối.</ins></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Môi trường: Máy chủ B</span>
+<span class="c"># Chặn toàn bộ gói tin từ Internet </span>
+<span class="nb">sudo </span>iptables <span class="nt">-I</span> DOCKER-USER <span class="nt">-i</span> eth0 <span class="nt">-j</span> DROP
+<span class="nb">sudo </span>iptables <span class="nt">-I</span> DOCKER-USER <span class="nt">-i</span> eth0 <span class="nt">-j</span> LOG <span class="nt">--log-prefix</span> <span class="s2">"Dropped packet: "</span> <span class="nt">--log-level</span> 4
+
+<span class="c"># Chặn toàn bộ gói tin nội bộ</span>
+<span class="nb">sudo </span>iptables <span class="nt">-I</span> DOCKER-USER <span class="nt">-i</span> eth1 <span class="nt">-j</span> DROP
+<span class="nb">sudo </span>iptables <span class="nt">-I</span> DOCKER-USER <span class="nt">-i</span> eth1 <span class="nt">-j</span> LOG <span class="nt">--log-prefix</span> <span class="s2">"Dropped packet: "</span> <span class="nt">--log-level</span> 4
+
+<span class="c"># Giữ các kết nối ở trạng thái ESTABLISHED, RELATED</span>
+<span class="c"># Rule này sẽ giúp bạn giải quyết tình trạng kết nối ra ngoài đã thiết lập nhưng lại bị chặn.</span>
+<span class="nb">sudo </span>iptables <span class="nt">-I</span> DOCKER-USER <span class="nt">-i</span> eth1 <span class="nt">-m</span> conntrack <span class="nt">--ctstate</span> ESTABLISHED,RELATED <span class="nt">-j</span> ACCEPT
+
+<span class="c"># Mở cho duy nhất máy chủ A truy cập cổng 3306 qua mạng nội bộ</span>
+<span class="nb">sudo </span>iptables <span class="nt">-I</span> DOCKER-USER <span class="nt">-i</span> eth1 <span class="nt">-m</span> conntrack <span class="nt">-p</span> tcp <span class="nt">--ctstate</span> NEW <span class="nt">--ctorigsrc</span> 10.0.0.1 <span class="nt">--ctorigdstport</span> 3306 <span class="nt">-j</span> ACCEPT
+
+<span class="c"># Mở cho duy nhất máy chủ C truy cập cổng 3307 qua mạng nội bộ</span>
+<span class="nb">sudo </span>iptables <span class="nt">-I</span> DOCKER-USER <span class="nt">-i</span> eth1 <span class="nt">-m</span> conntrack <span class="nt">-p</span> tcp <span class="nt">--ctstate</span> NEW <span class="nt">--ctorigsrc</span> 10.0.0.3 <span class="nt">--ctorigdstport</span> 3307 <span class="nt">-j</span> ACCEPT
+</code></pre></div></div>
+
+<!-- ## Tham chiếu -->
+
+<div class="footnotes" role="doc-endnotes">
+  <ol>
+    <li id="fn:1">
+      <p><a href="https://docs.docker.com/engine/network/packet-filtering-firewalls/#port-publishing-and-mapping">Packet filtering and firewalls</a> <a href="#fnref:1" class="reversefootnote" role="doc-backlink">&#8617;</a> <a href="#fnref:1:1" class="reversefootnote" role="doc-backlink">&#8617;<sup>2</sup></a> <a href="#fnref:1:2" class="reversefootnote" role="doc-backlink">&#8617;<sup>3</sup></a></p>
+    </li>
+    <li id="fn:2">
+      <p><a href="https://github.com/chaifeng/ufw-docker">To Fix The Docker and UFW Security Flaw Without Disabling Iptables</a> <a href="#fnref:2" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:3">
+      <p><a href="https://docs.aws.amazon.com/network-firewall/latest/developerguide/what-is-aws-network-firewall.html">AWS Network Firewall</a> <a href="#fnref:3" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:4">
+      <p><a href="https://cloud.google.com/firewall/docs/configure-global-fw-policies">Google Cloud NGFW</a> <a href="#fnref:4" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:5">
+      <p><a href="https://learn.microsoft.com/en-us/azure/firewall/overview">Azure Firewall</a> <a href="#fnref:5" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:6">
+      <p><a href="https://ipset.netfilter.org/iptables-extensions.man.html#lbAO">iptable conntrack extension</a> <a href="#fnref:6" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+  </ol>
+</div>]]></content><author><name></name></author><category term="technical" /><category term="docker" /><category term="security" /><category term="network" /><category term="firewall" /><category term="iptables" /><category term="ufw" /><summary type="html"><![CDATA[TLDR; UFW không chặn được các gói tin từ bên trong mạng nội bộ khi mapping port với Docker container (thường dùng trong tham số của docker run -p {internal-ip}:{expose-port}:{container-port}). Phương án 1: Sử dụng firewall từ Cloud Provider. Phương án 2: Sử dụng iptables để chặn các gói tin từ bên trong mạng nội bộ.]]></summary></entry><entry><title type="html">Lọc trùng dữ liệu</title><link href="https://thanhdancer.com/technical/2015/03/02/loc-trung-du-lieu.html" rel="alternate" type="text/html" title="Lọc trùng dữ liệu" /><published>2015-03-02T00:00:00+00:00</published><updated>2015-03-02T00:00:00+00:00</updated><id>https://thanhdancer.com/technical/2015/03/02/loc-trung-du-lieu</id><content type="html" xml:base="https://thanhdancer.com/technical/2015/03/02/loc-trung-du-lieu.html"><![CDATA[<h2 id="ý-chính">Ý chính</h2>
 <ul>
   <li>Sử dụng Bash với công cụ <code class="language-plaintext highlighter-rouge">cat</code>, <code class="language-plaintext highlighter-rouge">parallel</code>, <code class="language-plaintext highlighter-rouge">sed</code>, <code class="language-plaintext highlighter-rouge">sort</code> cho kết quả tối ưu nhất.</li>
 </ul>
