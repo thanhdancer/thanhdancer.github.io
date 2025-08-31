@@ -1,4 +1,50 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.4">Jekyll</generator><link href="https://thanhdancer.com/feed.xml" rel="self" type="application/atom+xml" /><link href="https://thanhdancer.com/" rel="alternate" type="text/html" /><updated>2025-01-16T06:39:36+00:00</updated><id>https://thanhdancer.com/feed.xml</id><title type="html">Dancing on the keyboard</title><subtitle>Nhiều khi chỉ muốn tìm nơi trút ra, mà không muốn phiền ai cả.</subtitle><entry><title type="html">Cẩn trọng dùng UFW với Docker</title><link href="https://thanhdancer.com/technical/2025/01/13/can-trong-dung-ufw-voi-docker.html" rel="alternate" type="text/html" title="Cẩn trọng dùng UFW với Docker" /><published>2025-01-13T00:00:00+00:00</published><updated>2025-01-13T00:00:00+00:00</updated><id>https://thanhdancer.com/technical/2025/01/13/can-trong-dung-ufw-voi-docker</id><content type="html" xml:base="https://thanhdancer.com/technical/2025/01/13/can-trong-dung-ufw-voi-docker.html"><![CDATA[<h2 id="tldr">TLDR;</h2>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.4">Jekyll</generator><link href="https://thanhdancer.com/feed.xml" rel="self" type="application/atom+xml" /><link href="https://thanhdancer.com/" rel="alternate" type="text/html" /><updated>2025-08-31T17:25:58+00:00</updated><id>https://thanhdancer.com/feed.xml</id><title type="html">Dancing on the keyboard</title><subtitle>Nhiều khi chỉ muốn tìm nơi trút ra, mà không muốn phiền ai cả.</subtitle><entry><title type="html">Scrum Reserve Timebox</title><link href="https://thanhdancer.com/management/2025/08/31/scrum-reserved-space.html" rel="alternate" type="text/html" title="Scrum Reserve Timebox" /><published>2025-08-31T00:00:00+00:00</published><updated>2025-08-31T00:00:00+00:00</updated><id>https://thanhdancer.com/management/2025/08/31/scrum-reserved-space</id><content type="html" xml:base="https://thanhdancer.com/management/2025/08/31/scrum-reserved-space.html"><![CDATA[<p>Khi tiếp cận với mô hình Agile, đặc biệt là Scrum, điều khiến mình tâm đắc nhất chính là backlog được quản lý trong timebox. Cách làm này bảo vệ đội ngũ khỏi tình trạng bị phân tâm, nhận thêm việc ngoài kế hoạch, dẫn đến quá tải, chất lượng giảm sút, phải làm thêm giờ và dễ rơi vào kiệt sức.</p>
+
+<p>Một Sprint kéo dài 2 tuần thường được coi là hợp lý: đủ ngắn để điều chỉnh chiến lược khi cần thiết, đủ dài để hoàn thiện một phase hoặc một tính năng, tạo ra một output vừa vặn khi kết thúc. Tuy nhiên, trên thực tế quản lý, luôn có những công việc chen ngang xuất hiện - thường là nhiệm vụ khẩn cấp, không thể chờ đến cuối Sprint. Nếu bỏ qua, dự án có thể đánh mất cơ hội hoặc đi sai hướng. Nếu đưa ngay vào Sprint đang chạy, thì vừa vi phạm nguyên tắc cam kết, vừa khiến team khó thực hiện trọn vẹn cả backlog cũ lẫn mới. Đây là một tình huống tiến thoái lưỡng nan mà mình từng nhiều lần gặp phải.</p>
+
+<h2 id="ý-chính-tóm-gọn">Ý chính tóm gọn</h2>
+<ul>
+  <li>Không thể tránh hoàn toàn việc chen ngang trong Sprint -&gt; cần cơ chế để xử lý.</li>
+  <li>Reserve Space = 20% effort dành cho công việc đột xuất, khẩn cấp.</li>
+  <li>Low Prioriry backlog có thể “lấp chỗ trống” nhưng sẵn sàng bị thay thế.</li>
+  <li>Nếu Reserve Space luôn bị vượt quá -&gt; phải xem lại kế hoạch dự án và kỳ vọng của các Stakeholders.</li>
+  <li>Kết hợp kỷ luật của Scrum với linh hoạt thực tế -&gt; giúp team vừa ổn định, vừa thích ứng.</li>
+</ul>
+
+<h2 id="phân-tích-vấn-đề">Phân tích vấn đề</h2>
+<p>Như đã nêu ở phần mở đầu, các vấn đề có thể kể đến trong trường hợp này gồm:</p>
+<ul>
+  <li>Nếu bỏ qua: có nguy cơ bỏ lỡ cơ hội quan trọng, dự án đi chệch mục tiêu.</li>
+  <li>Nếu nhồi thêm vào Sprint: team bị quá tải, backlog cam kết từ đầu khó hoàn thành, chất lượng tổng thể giảm.</li>
+</ul>
+
+<p>Kinh nghiệm thực tế cho thấy, việc này không thể giải quyết bằng cách áp dụng lý thuyết một cách cứng nhắc, mà cần có một cơ chế linh hoạt để hấp thụ các biến động.</p>
+
+<h2 id="giải-pháp-reserve-space-trong-sprint">Giải pháp: Reserve Space trong Sprint</h2>
+<p>Mình đã thử áp dụng một ý tưởng gọi là Reserve Space - tức dành trước một phần dung lượng Sprint để xử lý các công việc khẩn cấp. Cách làm như sau:</p>
+
+<ol>
+  <li>Khi lập kế hoạch Sprint:
+    <ul>
+      <li>Chỉ commit backlog chính (Normal Backlog) ở mức khoảng 80% effort tổng Sprint.</li>
+      <li>20% effort còn lại dành cho Reserve Space.</li>
+    </ul>
+  </li>
+  <li>Cách sử dụng Reserve Space:
+    <ul>
+      <li>Nếu có công việc khẩn cấp (Critical Backlog), chúng sẽ được đưa vào phần Reserve Space.</li>
+      <li>Các backlog ưu tiên thấp (Low Priority Backlog) có thể được xếp tạm trong Reserve Space để team thực hiện nếu không có việc chen ngang, nhưng sẵn sàng bị loại bỏ nếu cần nhường chỗ cho backlog quan trọng hơn.</li>
+    </ul>
+  </li>
+  <li>Khi Reserve Space bị vượt quá:
+    <ul>
+      <li>Nếu Sprint nào cũng xuất hiện quá nhiều backlog khẩn cấp vượt ngoài Reserve Space, đó là tín hiệu cần xem xét lại dự án: có thể team đang hứa hẹn quá mức hoặc kỳ vọng từ stakeholders chưa thực tế.</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="bài-học-rút-ra">Bài học rút ra</h2>
+<p>Scrum mang lại sự kỷ luật trong cam kết, nhưng thực tế quản lý dự án luôn có biến số. Thay vì máy moc bỏ qua hoặc nhồi nhét backlog chen ngang, việc chủ động thiết kế một khoảng dung lượng dự phòng trong Sprint giúp đội ngũ vừa giữ được sự ổn định, vừa linh hoạt khi tình huống bất ngờ xảy đến.</p>]]></content><author><name></name></author><category term="management" /><category term="project-management" /><category term="scrum" /><category term="agile" /><category term="timebox" /><category term="backlog" /><category term="sprint" /><summary type="html"><![CDATA[Khi tiếp cận với mô hình Agile, đặc biệt là Scrum, điều khiến mình tâm đắc nhất chính là backlog được quản lý trong timebox. Cách làm này bảo vệ đội ngũ khỏi tình trạng bị phân tâm, nhận thêm việc ngoài kế hoạch, dẫn đến quá tải, chất lượng giảm sút, phải làm thêm giờ và dễ rơi vào kiệt sức.]]></summary></entry><entry><title type="html">Cẩn trọng dùng UFW với Docker</title><link href="https://thanhdancer.com/technical/2025/01/13/can-trong-dung-ufw-voi-docker.html" rel="alternate" type="text/html" title="Cẩn trọng dùng UFW với Docker" /><published>2025-01-13T00:00:00+00:00</published><updated>2025-01-13T00:00:00+00:00</updated><id>https://thanhdancer.com/technical/2025/01/13/can-trong-dung-ufw-voi-docker</id><content type="html" xml:base="https://thanhdancer.com/technical/2025/01/13/can-trong-dung-ufw-voi-docker.html"><![CDATA[<h2 id="tldr">TLDR;</h2>
 <ul>
   <li>UFW không chặn được các gói tin từ bên trong mạng nội bộ khi mapping port với Docker container (thường dùng trong tham số của docker run <code class="language-plaintext highlighter-rouge">-p {internal-ip}:{expose-port}:{container-port}</code>).</li>
   <li>Phương án 1: Sử dụng firewall từ Cloud Provider.</li>
