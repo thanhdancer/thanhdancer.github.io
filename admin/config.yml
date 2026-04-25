@@ -1,0 +1,37 @@
+local_backend: true
+
+backend:
+  name: github
+  repo: thanhdancer/jekyll-thanhdancer-com
+  branch: main
+  base_url: "https://cms.thanhdancer.com"
+  auth_endpoint: auth
+
+
+publish_mode: editorial_workflow
+
+media_folder: "assets/images/uploads"
+public_folder: "/assets/images/uploads"
+
+collections:
+  - name: "posts"
+    label: "Posts"
+    folder: "_posts"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "Layout", name: "layout", widget: "hidden", default: "post" }
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Date", name: "date", widget: "datetime" }      
+      - { label: "Body", name: "body", widget: "markdown" }
+      - { label: "Categories", name: "categories", widget: "list", required: false }
+      - { label: "Tags", name: "tags", widget: "list", required: false }
+  - name: "pages"
+    label: "Pages"
+    folder: "_pages"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Layout", name: "layout", widget: "hidden", default: "page" }
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Body", name: "body", widget: "markdown" }
